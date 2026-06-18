@@ -1,0 +1,130 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --paper: #ffffff;
+  --surface: #faf9f6;
+  --surface-2: #f4f2ec;
+  --ink: #16130f;
+  --ink-2: #3a352e;
+  --muted: #6b6560;
+  --line: #e7e3db;
+  --line-2: #f0ece4;
+  --accent: #284b3a;
+  --accent-2: #1c3a2c;
+  --accent-soft: #eaf0ec;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink-2);
+  font-feature-settings: "ss01", "cv01";
+}
+
+::selection {
+  background: var(--accent);
+  color: #fff;
+}
+
+h1, h2, h3, h4 {
+  color: var(--ink);
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Long-form editorial content (area guides, insights, legal) */
+.prose-nara {
+  color: var(--ink-2);
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+.prose-nara p {
+  margin-bottom: 1.25rem;
+}
+.prose-nara h2 {
+  font-size: 1.6rem;
+  margin: 2.4rem 0 1rem;
+}
+.prose-nara h3 {
+  font-size: 1.25rem;
+  margin: 2rem 0 0.75rem;
+}
+.prose-nara ul {
+  margin: 0 0 1.25rem 1.1rem;
+  list-style: none;
+}
+.prose-nara ul li {
+  position: relative;
+  padding-left: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+.prose-nara ul li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.7em;
+  width: 0.4rem;
+  height: 0.4rem;
+  background: var(--accent);
+  border-radius: 50%;
+}
+.prose-nara a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Leaflet */
+.leaflet-container {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  background: var(--surface-2);
+}
+.leaflet-container a {
+  color: var(--accent);
+}
+.nara-pin {
+  background: var(--ink);
+  color: #fff;
+  font-family: var(--font-sans), sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.05ms !important;
+  }
+}

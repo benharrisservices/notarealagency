@@ -1,0 +1,327 @@
+// NARA — property opportunities platform schema
+// PostgreSQL + Prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ----------------------------- Enums -----------------------------
+
+enum TransactionType {
+  SALE
+  LETTING
+}
+
+enum ListingStatus {
+  DRAFT
+  AVAILABLE
+  UNDER_OFFER
+  SOLD
+  LET_AGREED
+  LET
+  WITHDRAWN
+}
+
+enum PropertyType {
+  APARTMENT
+  FLAT
+  STUDIO
+  TERRACED
+  SEMI_DETACHED
+  DETACHED
+  MAISONETTE
+  TOWNHOUSE
+  BUNGALOW
+  PENTHOUSE
+  MEWS
+  NEW_BUILD
+}
+
+enum Tenure {
+  FREEHOLD
+  LEASEHOLD
+  SHARE_OF_FREEHOLD
+  COMMONHOLD
+}
+
+enum OutdoorSpace {
+  NONE
+  BALCONY
+  PATIO
+  GARDEN
+  TERRACE
+  ROOF_TERRACE
+  COMMUNAL_GARDEN
+}
+
+enum RentFrequency {
+  PCM
+  PW
+}
+
+enum PriceQualifier {
+  GUIDE
+  OFFERS_OVER
+  OFFERS_IN_EXCESS_OF
+  FIXED
+  FROM
+  POA
+}
+
+enum DocumentType {
+  FLOORPLAN
+  EPC
+  BROCHURE
+}
+
+enum EnquiryType {
+  VIEWING
+  SALES
+  VALUATION
+  LETTINGS
+  CALLBACK
+  GENERAL
+}
+
+enum EnquiryStatus {
+  NEW
+  IN_PROGRESS
+  CLOSED
+}
+
+enum UserRole {
+  ADMIN
+  EDITOR
+  USER
+}
+
+enum AlertFrequency {
+  INSTANT
+  DAILY
+  WEEKLY
+}
+
+// ----------------------------- Core models -----------------------------
+
+model Property {
+  id              String          @id @default(cuid())
+  slug            String          @unique
+  reference       String          @unique
+  title           String
+  summary         String
+  description     String          @db.Text
+
+  transactionType TransactionType @default(SALE)
+  status          ListingStatus   @default(AVAILABLE)
+  propertyType    PropertyType
+  tenure          Tenure?
+
+  price           Int // whole GBP: sale price, or rent amount for lettings
+  priceQualifier  PriceQualifier  @default(GUIDE)
+  rentFrequency   RentFrequency?
+
+  bedrooms        Int             @default(0)
+  bathrooms       Int             @default(0)
+  receptions      Int             @default(0)
+  floorAreaSqft   Int?
+  floorAreaSqm    Float?
+
+  features        String[]
+  chainFree       Boolean         @default(false)
+  newBuild        Boolean         @default(false)
+
+  parking         Boolean         @default(false)
+  parkingDetail   String?
+  outdoorSpace    OutdoorSpace    @default(NONE)
+  outdoorDetail   String?
+
+  councilTaxBand  String?
+  epcRating       String?
+  epcScore        Int?
+  epcPotential    String?
+  epcPotentialScore Int?
+
+  leaseYears      Int?
+  serviceCharge   Int?
+  groundRent      Int?
+
+  // Address / geo
+  displayAddress  String
+  addressLine1    String?
+  addressLine2    String?
+  city            String          @default("London")
+  postcode        String
+  latitude        Float?
+  longitude       Float?
+
+  featured        Boolean         @default(false)
+
+  locationId      String?
+  location        Location?       @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  agentId         String?
+  agent           Agent?          @relation(fields: [agentId], references: [id], onDelete: SetNull)
+
+  images          PropertyImage[]
+  documents       PropertyDocument[]
+  enquiries       Enquiry[]
+  savedBy         SavedProperty[]
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  publishedAt     DateTime?
+
+  @@index([status, transactionType])
+  @@index([price])
+  @@index([bedrooms])
+  @@index([propertyType])
+  @@index([locationId])
+}
+
+model PropertyImage {
+  id         String   @id @default(cuid())
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  url        String
+  alt        String?
+  caption    String?
+  sortOrder  Int      @default(0)
+  isPrimary  Boolean  @default(false)
+
+  @@index([propertyId])
+}
+
+model PropertyDocument {
+  id         String       @id @default(cuid())
+  propertyId String
+  property   Property     @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  type       DocumentType
+  title      String
+  url        String
+
+  @@index([propertyId])
+}
+
+model Agent {
+  id         String     @id @default(cuid())
+  slug       String     @unique
+  name       String
+  title      String
+  email      String
+  phone      String?
+  bio        String?    @db.Text
+  photoUrl   String?
+  properties Property[]
+  createdAt  DateTime   @default(now())
+}
+
+model Location {
+  id               String     @id @default(cuid())
+  slug             String     @unique
+  name             String
+  borough          String?
+  region           String?
+  description      String?    @db.Text
+  postcodePrefixes String[]
+  heroImage        String?
+  latitude         Float?
+  longitude        Float?
+  properties       Property[]
+  areaGuide        AreaGuide?
+  createdAt        DateTime   @default(now())
+}
+
+model AreaGuide {
+  id         String   @id @default(cuid())
+  slug       String   @unique
+  title      String
+  intro      String   @db.Text
+  body       String   @db.Text
+  heroImage  String?
+  highlights String[]
+  transport  String[]
+  published  Boolean  @default(true)
+  locationId String?  @unique
+  location   Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model BlogPost {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String
+  excerpt     String
+  body        String    @db.Text
+  coverImage  String?
+  author      String    @default("NARA")
+  tags        String[]
+  published   Boolean   @default(true)
+  publishedAt DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// ----------------------------- Accounts & engagement -----------------------------
+
+model User {
+  id             String          @id @default(cuid())
+  email          String          @unique
+  passwordHash   String
+  name           String?
+  role           UserRole        @default(USER)
+  savedProperties SavedProperty[]
+  savedSearches  SavedSearch[]
+  alerts         PropertyAlert[]
+  createdAt      DateTime        @default(now())
+}
+
+model SavedProperty {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, propertyId])
+}
+
+model SavedSearch {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String?
+  filters   Json
+  createdAt DateTime @default(now())
+}
+
+model PropertyAlert {
+  id        String         @id @default(cuid())
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  filters   Json
+  frequency AlertFrequency @default(DAILY)
+  active    Boolean        @default(true)
+  createdAt DateTime       @default(now())
+}
+
+model Enquiry {
+  id         String        @id @default(cuid())
+  type       EnquiryType   @default(GENERAL)
+  status     EnquiryStatus @default(NEW)
+  name       String
+  email      String
+  phone      String?
+  message    String        @db.Text
+  propertyId String?
+  property   Property?     @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  createdAt  DateTime      @default(now())
+
+  @@index([status])
+  @@index([type])
+}
